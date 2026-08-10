@@ -1,0 +1,14 @@
+# Env
+.env
+.env.*
+!.env.example
+
+# Docker volumes & TLS
+*.pem
+*.key
+*.crt
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
