@@ -1,0 +1,88 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { Auth, InvalidCredentialsError } from '../../../core/auth/auth';
+import { SignInStatus } from '../../../core/auth/auth.models';
+
+/** Longitud mínima de la contraseña para el formulario de login. */
+const MIN_PASSWORD_LENGTH = 6;
+
+/**
+ * Pantalla de login institucional (Fase 1).
+ *
+ * Reactive Form con email + contraseña. Delega la autenticación en `Auth`,
+ * que actualmente usa un mock reemplazable (sin backend). No navega a ningún
+ * dashboard (fuera de alcance): el estado `success` es meramente visual.
+ *
+ * Estados: idle → validating | loading → invalid | success.
+ */
+@Component({
+  selector: 'app-login',
+  imports: [ReactiveFormsModule],
+  templateUrl: './login.html',
+  styleUrl: './login.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Login {
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+
+  /** Estado visual del formulario. */
+  readonly status = signal<SignInStatus>('idle');
+  /** Mensaje de error para credenciales inválidas o fallos inesperados. */
+  readonly errorMessage = signal('');
+
+  readonly form = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(MIN_PASSWORD_LENGTH)]],
+  });
+
+  get email() {
+    return this.form.controls.email;
+  }
+
+  get password() {
+    return this.form.controls.password;
+  }
+
+  /** True cuando un control ya fue tocado o se intentó enviar. */
+  private showFieldError(invalid: boolean, touched: boolean): boolean {
+    return invalid && (touched || this.status() === 'validating');
+  }
+
+  /** Expuesto al template para evitar repetir lógica. */
+  emailHasError(): boolean {
+    return this.showFieldError(this.email.invalid, this.email.touched);
+  }
+
+  passwordHasError(): boolean {
+    return this.showFieldError(this.password.invalid, this.password.touched);
+  }
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.status.set('validating');
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.status.set('loading');
+    this.errorMessage.set('');
+
+    const { email, password } = this.form.getRawValue();
+    this.auth.signIn({ email, password }).subscribe({
+      next: () => {
+        // Sin dashboard todavía: mostramos éxito mock y conservamos la sesión.
+        this.status.set('success');
+      },
+      error: (error: unknown) => {
+        if (error instanceof InvalidCredentialsError) {
+          this.errorMessage.set('El correo o la contraseña no son correctos.');
+        } else {
+          this.errorMessage.set('Ocurrió un error inesperado. Intentá nuevamente.');
+        }
+        this.status.set('invalid');
+      },
+    });
+  }
+}
