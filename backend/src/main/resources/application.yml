@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  # Default to the dev profile so the demo-only credentials in application-dev.yml
+  # are loaded and the in-memory repository can seed. This slice is NOT production:
+  # there is no persistence/JWT layer yet. Do not activate prod until those land.
+  profiles:
+    active: dev
+  main:
+    banner-mode: off
+  application:
+    name: acreditacion-backend
+
+logging:
+  level:
+    org.springframework: WARN
+    com.undec.acreditacion: INFO

@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# DEV-ONLY DEMO CREDENTIALS (REQUIRED, NEVER COMMITTED)
+# ---------------------------------------------------------------------------
+# These values seed the in-memory user repository so the login endpoint can be
+# exercised end-to-end during development. They are NOT production credentials:
+# the in-memory store is lost on restart and no persistence/JWT layer exists yet.
+#
+# No demo email/password is hardcoded as a default: both MUST be supplied as
+# environment variables, otherwise the application FAILS FAST at startup with a
+# clear "Could not resolve placeholder" error naming the exact variable to set.
+# This is intentional so a misconfigured or prod-like environment can never boot
+# with a weak built-in credential.
+#
+#   ACREDITACION_DEMO_EMAIL     e.g. admin@undec.edu
+#   ACREDITACION_DEMO_PASSWORD  choose a throwaway dev-only value
+#
+# Never commit real secrets here. This profile must not be activated in prod.
+# ---------------------------------------------------------------------------
+acreditacion:
+  security:
+    demo:
+      email: ${ACREDITACION_DEMO_EMAIL}
+      password: ${ACREDITACION_DEMO_PASSWORD}
