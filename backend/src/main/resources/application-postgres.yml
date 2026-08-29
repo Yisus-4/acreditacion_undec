@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# Perfil "postgres" -- persistencia real con Flyway + PostgreSQL.
+# ---------------------------------------------------------------------------
+# NO es el perfil por defecto. El perfil activo por defecto es "dev"
+# (ver application.yml), que sigue usando el repositorio en memoria y NO
+# requiere una base de datos. Activa este perfil solo cuando haya un
+# PostgreSQL disponible:
+#
+#   --spring.profiles.active=postgres
+#
+# Las credenciales se inyectan por variables de entorno para no commitear
+# secretos. Si falta alguna, la app falla rápido con un error claro.
+#
+#   ACREDITACION_DB_URL      jdbc:postgresql://localhost:5432/acreditacion
+#   ACREDITACION_DB_USERNAME usuario de la base
+#   ACREDITACION_DB_PASSWORD clave de la base
+# ---------------------------------------------------------------------------
+spring:
+  datasource:
+    url: ${ACREDITACION_DB_URL}
+    username: ${ACREDITACION_DB_USERNAME}
+    password: ${ACREDITACION_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
