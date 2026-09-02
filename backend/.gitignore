@@ -29,6 +29,7 @@ logs/
 .settings/
 *.swp
 *.swo
+/Agents
 
 # OS
 .DS_Store
