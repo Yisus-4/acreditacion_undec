@@ -25,9 +25,6 @@ public final class LoginService implements LoginUseCase {
 
     @Override
     public User login(String email, String rawPassword) {
-        // Invalid input is intentionally collapsed into the same generic
-        // authentication failure as unknown user / wrong password / inactive
-        // user, so the response never reveals which check failed.
         if (isBlank(email) || isBlank(rawPassword)) {
             throw new AuthenticationFailedException();
         }
