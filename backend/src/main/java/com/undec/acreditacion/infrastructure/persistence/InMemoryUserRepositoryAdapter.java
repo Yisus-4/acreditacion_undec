@@ -6,6 +6,8 @@ import com.undec.acreditacion.domain.entities.User;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,8 +41,25 @@ public final class InMemoryUserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return users.values().stream()
-                .filter(user -> user.getEmail().equals(email))
+                .filter(user -> user.getEmail().equalsIgnoreCase(email))
                 .findFirst();
+    }
+
+    @Override
+    public List<User> findAll() {
+        return new ArrayList<>(users.values());
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return users.values().stream()
+                .anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return users.values().stream()
+                .anyMatch(user -> user.getUsername().equalsIgnoreCase(username));
     }
 
     @Override

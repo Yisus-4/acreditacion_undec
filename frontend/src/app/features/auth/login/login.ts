@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { Auth, InvalidCredentialsError } from '../../../core/auth/auth';
 import { SignInStatus } from '../../../core/auth/auth.models';
@@ -7,15 +8,6 @@ import { SignInStatus } from '../../../core/auth/auth.models';
 /** Longitud mínima de la contraseña para el formulario de login. */
 const MIN_PASSWORD_LENGTH = 6;
 
-/**
- * Pantalla de login institucional (Fase 1).
- *
- * Reactive Form con email + contraseña. Delega la autenticación en `Auth`,
- * que actualmente usa un mock reemplazable (sin backend). No navega a ningún
- * dashboard (fuera de alcance): el estado `success` es meramente visual.
- *
- * Estados: idle → validating | loading → invalid | success.
- */
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule],
@@ -23,9 +15,10 @@ const MIN_PASSWORD_LENGTH = 6;
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Login {
+export class Login implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   /** Estado visual del formulario. */
   readonly status = signal<SignInStatus>('idle');
@@ -36,6 +29,12 @@ export class Login {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(MIN_PASSWORD_LENGTH)]],
   });
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated) {
+      void this.router.navigate(['/dashboard']);
+    }
+  }
 
   get email() {
     return this.form.controls.email;
@@ -72,8 +71,8 @@ export class Login {
     const { email, password } = this.form.getRawValue();
     this.auth.signIn({ email, password }).subscribe({
       next: () => {
-        // Sin dashboard todavía: mostramos éxito mock y conservamos la sesión.
         this.status.set('success');
+        void this.router.navigate(['/dashboard']);
       },
       error: (error: unknown) => {
         if (error instanceof InvalidCredentialsError) {

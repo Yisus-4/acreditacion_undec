@@ -1,0 +1,389 @@
+<div class="admin-layout">
+  <!-- Topbar con breadcrumb y navegación -->
+  <header class="admin-header">
+    <div class="admin-header__content">
+      <div class="admin-header__left">
+        <a routerLink="/dashboard" class="back-link">
+          &larr; Volver al Dashboard
+        </a>
+        <h1 class="admin-header__title">Administración de Usuarios</h1>
+        <p class="admin-header__desc">
+          Gestione las cuentas de acceso, roles asignados y el estado de activación en el sistema.
+        </p>
+      </div>
+      <div class="admin-header__right">
+        <button class="btn btn--primary" (click)="openCreateModal()" type="button">
+          + Nuevo Usuario
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mensajes de feedback -->
+  <div class="admin-container">
+    @if (successMessage()) {
+      <div class="alert alert--success" role="alert">
+        <span>{{ successMessage() }}</span>
+        <button class="alert__close" (click)="dismissAlerts()" type="button">&times;</button>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert--danger" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <button class="alert__close" (click)="dismissAlerts()" type="button">&times;</button>
+      </div>
+    }
+
+    <!-- Barra de búsqueda y filtros -->
+    <div class="table-toolbar">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Buscar por usuario o correo..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <div class="table-stats">
+        <span>Total: <strong>{{ filteredUsers().length }}</strong> usuarios</span>
+      </div>
+    </div>
+
+    <!-- Tabla responsiva -->
+    <div class="table-container">
+      @if (loading()) {
+        <div class="loading-state">
+          <span class="spinner"></span>
+          <span>Cargando usuarios...</span>
+        </div>
+      } @else if (filteredUsers().length === 0) {
+        <div class="empty-state">
+          <p>No se encontraron usuarios que coincidan con la búsqueda.</p>
+        </div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Correo electrónico</th>
+              <th>Roles</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers(); track user.id) {
+              <tr [class.row--inactive]="!user.active">
+                <td>
+                  <span class="font-medium">{{ user.username }}</span>
+                </td>
+                <td>
+                  <span class="text-muted">{{ user.email }}</span>
+                </td>
+                <td>
+                  <div class="chips-container">
+                    @for (role of user.roleCodes; track role) {
+                      <span class="badge badge--role">{{ role }}</span>
+                    }
+                    @if (!user.roleCodes || user.roleCodes.length === 0) {
+                      <span class="badge badge--muted">Sin roles</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  @if (user.systemUser) {
+                    <span class="badge badge--system" title="Usuario esencial del sistema">Sistema</span>
+                  } @else {
+                    <span class="badge badge--neutral">Estándar</span>
+                  }
+                </td>
+                <td>
+                  @if (user.active) {
+                    <span class="badge badge--active">Activo</span>
+                  } @else {
+                    <span class="badge badge--inactive">Inactivo</span>
+                  }
+                </td>
+                <td class="text-right">
+                  <div class="actions-group">
+                    <button
+                      class="btn-action btn-action--edit"
+                      (click)="openEditModal(user)"
+                      type="button"
+                    >
+                      Editar
+                    </button>
+
+                    @if (user.systemUser && user.active) {
+                      <button
+                        class="btn-action btn-action--disabled"
+                        type="button"
+                        disabled
+                        title="Los usuarios del sistema no pueden ser desactivados"
+                      >
+                        Desactivar
+                      </button>
+                    } @else if (user.active) {
+                      <button
+                        class="btn-action btn-action--deactivate"
+                        (click)="openStatusConfirm(user)"
+                        type="button"
+                      >
+                        Desactivar
+                      </button>
+                    } @else {
+                      <button
+                        class="btn-action btn-action--activate"
+                        (click)="openStatusConfirm(user)"
+                        type="button"
+                      >
+                        Activar
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+
+  <!-- Modal Crear Usuario -->
+  @if (showCreateModal()) {
+    <div class="modal-backdrop" (click)="closeCreateModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Nuevo Usuario</h2>
+          <button class="modal-close" (click)="closeCreateModal()" type="button">&times;</button>
+        </div>
+
+        <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+          <div class="modal-body">
+            <div class="form-field">
+              <label for="create-username">Nombre de usuario</label>
+              <input
+                id="create-username"
+                type="text"
+                formControlName="username"
+                placeholder="ej. jperez"
+              />
+              @if (createForm.controls.username.invalid && createForm.controls.username.touched) {
+                <span class="form-error">El nombre de usuario debe tener al menos 3 caracteres.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="create-email">Correo electrónico institucional</label>
+              <input
+                id="create-email"
+                type="email"
+                formControlName="email"
+                placeholder="ej. jperez@undec.edu.ar"
+              />
+              @if (createForm.controls.email.invalid && createForm.controls.email.touched) {
+                <span class="form-error">Ingrese un correo electrónico válido.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="create-password">Contraseña inicial</label>
+              <input
+                id="create-password"
+                type="password"
+                formControlName="password"
+                placeholder="Mínimo 6 caracteres"
+              />
+              @if (createForm.controls.password.invalid && createForm.controls.password.touched) {
+                <span class="form-error">La contraseña debe tener al menos 6 caracteres.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label>Asignación de Roles</label>
+              <div class="roles-checklist">
+                @for (role of roles(); track role.id) {
+                  <label class="checkbox-item">
+                    <input
+                      type="checkbox"
+                      [checked]="isRoleSelected(role.code)"
+                      (change)="toggleRole(role.code)"
+                    />
+                    <div class="checkbox-item__details">
+                      <strong>{{ role.name }}</strong>
+                      <span class="role-desc">{{ role.description }} ({{ role.code }})</span>
+                    </div>
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn--secondary" (click)="closeCreateModal()" type="button">
+              Cancelar
+            </button>
+            <button
+              class="btn btn--primary"
+              type="submit"
+              [disabled]="submitting()"
+            >
+              @if (submitting()) {
+                Guardando…
+              } @else {
+                Crear Usuario
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Editar Usuario -->
+  @if (showEditModal()) {
+    <div class="modal-backdrop" (click)="closeEditModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Editar Usuario: {{ selectedUser()?.username }}</h2>
+          <button class="modal-close" (click)="closeEditModal()" type="button">&times;</button>
+        </div>
+
+        <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
+          <div class="modal-body">
+            @if (selectedUser()?.systemUser) {
+              <div class="alert alert--info mb-4">
+                <strong>Usuario del sistema:</strong> Esta cuenta es fundamental para el funcionamiento y no puede ser desactivada.
+              </div>
+            }
+
+            <div class="form-field">
+              <label for="edit-username">Nombre de usuario</label>
+              <input
+                id="edit-username"
+                type="text"
+                formControlName="username"
+              />
+              @if (editForm.controls.username.invalid && editForm.controls.username.touched) {
+                <span class="form-error">El nombre de usuario debe tener al menos 3 caracteres.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="edit-email">Correo electrónico</label>
+              <input
+                id="edit-email"
+                type="email"
+                formControlName="email"
+              />
+              @if (editForm.controls.email.invalid && editForm.controls.email.touched) {
+                <span class="form-error">Ingrese un correo electrónico válido.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="edit-password">Nueva contraseña (opcional)</label>
+              <input
+                id="edit-password"
+                type="password"
+                formControlName="newPassword"
+                placeholder="Dejar en blanco para mantener la actual"
+              />
+            </div>
+
+            <div class="form-field">
+              <label>Asignación de Roles</label>
+              <div class="roles-checklist">
+                @for (role of roles(); track role.id) {
+                  <label class="checkbox-item">
+                    <input
+                      type="checkbox"
+                      [checked]="isRoleSelected(role.code)"
+                      (change)="toggleRole(role.code)"
+                    />
+                    <div class="checkbox-item__details">
+                      <strong>{{ role.name }}</strong>
+                      <span class="role-desc">{{ role.description }} ({{ role.code }})</span>
+                    </div>
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn--secondary" (click)="closeEditModal()" type="button">
+              Cancelar
+            </button>
+            <button
+              class="btn btn--primary"
+              type="submit"
+              [disabled]="submitting()"
+            >
+              @if (submitting()) {
+                Actualizando…
+              } @else {
+                Guardar Cambios
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Confirmación Estado -->
+  @if (showConfirmModal()) {
+    <div class="modal-backdrop" (click)="closeStatusConfirm()">
+      <div class="modal-dialog modal-dialog--sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>
+            {{ selectedUser()?.active ? 'Desactivar Usuario' : 'Activar Usuario' }}
+          </h2>
+          <button class="modal-close" (click)="closeStatusConfirm()" type="button">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          @if (selectedUser()?.active) {
+            <p>
+              ¿Está seguro de que desea desactivar a <strong>{{ selectedUser()?.username }}</strong>?
+            </p>
+            <p class="text-muted">
+              El usuario no podrá iniciar sesión en la plataforma ni acceder a los módulos de acreditación.
+            </p>
+          } @else {
+            <p>
+              ¿Está seguro de que desea reactivar a <strong>{{ selectedUser()?.username }}</strong>?
+            </p>
+            <p class="text-muted">
+              El usuario recuperará el acceso inmediato al sistema con sus roles previamente asignados.
+            </p>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn--secondary" (click)="closeStatusConfirm()" type="button">
+            Cancelar
+          </button>
+          <button
+            class="btn"
+            [class.btn--danger]="selectedUser()?.active"
+            [class.btn--primary]="!selectedUser()?.active"
+            (click)="confirmStatusChange()"
+            [disabled]="submitting()"
+            type="button"
+          >
+            @if (submitting()) {
+              Procesando…
+            } @else {
+              {{ selectedUser()?.active ? 'Confirmar Desactivación' : 'Confirmar Activación' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

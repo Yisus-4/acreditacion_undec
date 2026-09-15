@@ -81,6 +81,63 @@ class UserTest {
                 () -> User.rehydrate(UUID.randomUUID(), "user", "user@example.org", "hash", true, null));
     }
 
+    @Test
+    void updatesProfileWithValidValues() {
+        User user = user();
+        user.updateProfile("new_username", "new_email@example.org");
+
+        assertEquals("new_username", user.getUsername());
+        assertEquals("new_email@example.org", user.getEmail());
+    }
+
+    @Test
+    void rejectsInvalidEmailOnUpdateProfile() {
+        User user = user();
+        assertThrows(DomainValidationException.class, () -> user.updateProfile("new_username", "invalid"));
+    }
+
+    @Test
+    void updatesPasswordHash() {
+        User user = user();
+        user.changePassword("new_hash_123");
+
+        assertEquals("new_hash_123", user.getPasswordHash());
+    }
+
+    @Test
+    void syncsRolesSuccessfully() {
+        User user = user();
+        Role role1 = Role.system(UUID.randomUUID(), "ROLE_1", "Role 1", "Desc 1");
+        Role role2 = Role.custom(UUID.randomUUID(), "ROLE_2", "Role 2", "Desc 2");
+
+        user.syncRoles(Set.of(role1, role2));
+
+        assertEquals(2, user.getRoles().size());
+        assertTrue(user.getRoles().contains(role1));
+        assertTrue(user.getRoles().contains(role2));
+    }
+
+    @Test
+    void rejectsNullOrNullElementsInSyncRoles() {
+        User user = user();
+        assertThrows(DomainValidationException.class, () -> user.syncRoles(null));
+
+        Set<Role> rolesWithNull = new java.util.HashSet<>();
+        rolesWithNull.add(null);
+        assertThrows(DomainValidationException.class, () -> user.syncRoles(rolesWithNull));
+    }
+
+    @Test
+    void systemUserCannotBeDeactivated() {
+        User systemUser = User.rehydrate(UUID.randomUUID(), "admin", "admin@example.org", "hash", true, true, Set.of());
+        assertTrue(systemUser.isSystemUser());
+        assertTrue(systemUser.isActive());
+
+        DomainValidationException ex = assertThrows(DomainValidationException.class, systemUser::deactivate);
+        assertEquals("System user cannot be deactivated", ex.getMessage());
+        assertTrue(systemUser.isActive());
+    }
+
     private static User user() {
         return User.register("user", "user@example.org", "encoded-password");
     }

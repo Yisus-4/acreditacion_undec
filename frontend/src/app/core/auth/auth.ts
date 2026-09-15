@@ -1,8 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
 import { Credentials, Session } from './auth.models';
+
+const SESSION_STORAGE_KEY = 'undec_session';
 
 /**
  * `Auth` es el servicio singleton de autenticación.
@@ -15,7 +18,8 @@ import { Credentials, Session } from './auth.models';
 })
 export class Auth {
   private readonly http = inject(HttpClient);
-  private readonly session$ = new BehaviorSubject<Session | null>(null);
+  private readonly router = inject(Router);
+  private readonly session$ = new BehaviorSubject<Session | null>(this.loadSessionFromStorage());
 
   /** Observable de la sesión actual (null cuando no hay sesión). */
   readonly currentSession$: Observable<Session | null> = this.session$.asObservable();
@@ -35,7 +39,10 @@ export class Auth {
    */
   signIn(credentials: Credentials): Observable<Session> {
     return this.http.post<Session>('/api/auth/login', credentials).pipe(
-      tap((session) => this.session$.next(session)),
+      tap((session) => {
+        this.session$.next(session);
+        this.saveSessionToStorage(session);
+      }),
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           return throwError(() => new InvalidCredentialsError());
@@ -45,9 +52,38 @@ export class Auth {
     );
   }
 
-  /** Cierra la sesión actual. */
+  /** Cierra la sesión actual, limpia almacenamiento y navega al login. */
   signOut(): void {
+    try {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // Ignorar fallo al acceder a localStorage
+    }
     this.session$.next(null);
+    void this.router.navigate(['/login']);
+  }
+
+  private loadSessionFromStorage(): Session | null {
+    try {
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (raw) {
+        const session: Session = JSON.parse(raw);
+        if (session && session.user && session.token) {
+          return session;
+        }
+      }
+    } catch {
+      // Ignorar fallo al acceder a localStorage o parsear
+    }
+    return null;
+  }
+
+  private saveSessionToStorage(session: Session): void {
+    try {
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // Ignorar fallo al guardar en localStorage
+    }
   }
 }
 

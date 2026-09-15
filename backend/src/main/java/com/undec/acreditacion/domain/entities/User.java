@@ -11,22 +11,28 @@ import java.util.UUID;
 public final class User {
 
     private final UUID id;
-    private final String username;
-    private final String email;
-    private final String passwordHash;
+    private String username;
+    private String email;
+    private String passwordHash;
     private final Set<Role> roles = new LinkedHashSet<>();
     private boolean active;
+    private final boolean systemUser;
 
     public static User register(String username, String email, String passwordHash) {
-        return new User(UUID.randomUUID(), username, email, passwordHash);
+        return new User(UUID.randomUUID(), username, email, passwordHash, false);
     }
 
     public static User rehydrate(UUID id, String username, String email, String passwordHash,
                                  boolean active, Set<Role> roles) {
+        return rehydrate(id, username, email, passwordHash, active, false, roles);
+    }
+
+    public static User rehydrate(UUID id, String username, String email, String passwordHash,
+                                 boolean active, boolean systemUser, Set<Role> roles) {
         if (roles == null) {
             throw new DomainValidationException("User roles are required");
         }
-        User user = new User(id, username, email, passwordHash);
+        User user = new User(id, username, email, passwordHash, systemUser);
         user.active = active;
         for (Role role : roles) {
             if (role == null) {
@@ -40,11 +46,16 @@ public final class User {
     }
 
     public User(UUID id, String username, String email, String passwordHash) {
+        this(id, username, email, passwordHash, false);
+    }
+
+    public User(UUID id, String username, String email, String passwordHash, boolean systemUser) {
         this.id = Objects.requireNonNull(id, "User id is required");
         this.username = Permission.requireText(username, "Username");
         this.email = requireEmail(email);
         this.passwordHash = Permission.requireText(passwordHash, "Password hash");
         this.active = true;
+        this.systemUser = systemUser;
     }
 
     public UUID getId() {
@@ -67,8 +78,34 @@ public final class User {
         return active;
     }
 
+    public boolean isSystemUser() {
+        return systemUser;
+    }
+
     public Set<Role> getRoles() {
         return Collections.unmodifiableSet(roles);
+    }
+
+    public void updateProfile(String newUsername, String newEmail) {
+        this.username = Permission.requireText(newUsername, "Username");
+        this.email = requireEmail(newEmail);
+    }
+
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = Permission.requireText(newPasswordHash, "Password hash");
+    }
+
+    public void syncRoles(Set<Role> newRoles) {
+        if (newRoles == null) {
+            throw new DomainValidationException("User roles are required");
+        }
+        this.roles.clear();
+        for (Role role : newRoles) {
+            if (role == null) {
+                throw new DomainValidationException("User roles cannot contain null values");
+            }
+            this.roles.add(role);
+        }
     }
 
     public void assignRole(Role role) {
@@ -90,6 +127,9 @@ public final class User {
     }
 
     public void deactivate() {
+        if (systemUser) {
+            throw new DomainValidationException("System user cannot be deactivated");
+        }
         active = false;
     }
 

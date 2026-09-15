@@ -5,7 +5,9 @@ import com.undec.acreditacion.application.output.UserRepository;
 import com.undec.acreditacion.domain.entities.Role;
 import com.undec.acreditacion.domain.entities.User;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -153,6 +155,21 @@ public final class SecurityUseCasesTest {
         }
 
         @Override
+        public List<User> findAll() {
+            return new ArrayList<>(users.values());
+        }
+
+        @Override
+        public boolean existsByEmail(String email) {
+            return users.values().stream().anyMatch(user -> user.getEmail().equals(email));
+        }
+
+        @Override
+        public boolean existsByUsername(String username) {
+            return users.values().stream().anyMatch(user -> user.getUsername().equals(username));
+        }
+
+        @Override
         public User save(User user) {
             saveCount++;
             users.put(user.getId(), user);
@@ -171,6 +188,11 @@ public final class SecurityUseCasesTest {
         @Override
         public Optional<Role> findByCode(String code) {
             return roles.values().stream().filter(role -> role.getCode().equals(code)).findFirst();
+        }
+
+        @Override
+        public List<Role> findAll() {
+            return new ArrayList<>(roles.values());
         }
 
         @Override

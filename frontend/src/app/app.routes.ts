@@ -1,19 +1,28 @@
 import { Routes } from '@angular/router';
 
-/**
- * Rutas mínimas de la Fase 1.
- *
- * El login es la pantalla inicial. No existe dashboard todavía, por lo que el
- * resto de rutas redirigen a `/login`. Cuando se apruebe el dashboard y el
- * backend exponga autenticación, se añadirán rutas protegidas con `canMatch`.
- */
+import { authGuard } from './core/auth/guards/auth.guard';
+
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   {
     path: 'login',
     title: 'Acceso — Sistema de Acreditación UNdeC',
     loadComponent: () =>
       import('./features/auth/login/login').then((m) => m.Login),
   },
-  { path: '**', redirectTo: 'login' },
+  {
+    path: 'dashboard',
+    title: 'Dashboard — Sistema de Acreditación UNdeC',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+  },
+  {
+    path: 'admin/users',
+    title: 'Administración de Usuarios — Sistema de Acreditación UNdeC',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/admin/users/users').then((m) => m.UserManagement),
+  },
+  { path: '**', redirectTo: 'dashboard' },
 ];

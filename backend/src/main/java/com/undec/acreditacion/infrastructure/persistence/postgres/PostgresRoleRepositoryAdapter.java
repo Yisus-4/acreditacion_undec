@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +36,14 @@ public class PostgresRoleRepositoryAdapter implements RoleRepository {
     public Optional<Role> findByCode(String code) {
         return springDataRoleRepository.findByCode(code)
                 .map(mapper::toDomainRole);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Role> findAll() {
+        return springDataRoleRepository.findAll().stream()
+                .map(mapper::toDomainRole)
+                .toList();
     }
 
     @Override

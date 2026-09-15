@@ -151,6 +151,21 @@ final class LoginServiceTest {
         }
 
         @Override
+        public java.util.List<User> findAll() {
+            return new java.util.ArrayList<>(users.values());
+        }
+
+        @Override
+        public boolean existsByEmail(String email) {
+            return users.values().stream().anyMatch(u -> u.getEmail().equals(email));
+        }
+
+        @Override
+        public boolean existsByUsername(String username) {
+            return users.values().stream().anyMatch(u -> u.getUsername().equals(username));
+        }
+
+        @Override
         public User save(User user) {
             users.put(user.getId(), user);
             return user;

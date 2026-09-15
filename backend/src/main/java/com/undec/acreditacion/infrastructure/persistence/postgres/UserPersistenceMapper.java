@@ -28,6 +28,7 @@ public class UserPersistenceMapper {
                 entity.getEmail(),
                 entity.getPasswordHash(),
                 entity.isActive(),
+                entity.isSystemUser(),
                 roles
         );
     }
@@ -43,7 +44,7 @@ public class UserPersistenceMapper {
                 user.getEmail(),
                 user.getPasswordHash(),
                 user.isActive(),
-                false,
+                user.isSystemUser(),
                 Instant.now()
         );
 

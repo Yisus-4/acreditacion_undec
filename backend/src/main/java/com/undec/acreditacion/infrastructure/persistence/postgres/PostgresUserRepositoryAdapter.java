@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +36,26 @@ public class PostgresUserRepositoryAdapter implements UserRepository {
     public Optional<User> findByEmail(String email) {
         return springDataUserRepository.findByEmail(email)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        return springDataUserRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        return springDataUserRepository.existsByEmail(email);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String username) {
+        return springDataUserRepository.existsByUsername(username);
     }
 
     @Override

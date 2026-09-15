@@ -1,11 +1,22 @@
 package com.undec.acreditacion.infrastructure.config;
 
+import com.undec.acreditacion.application.input.ChangeUserStatusUseCase;
+import com.undec.acreditacion.application.input.CreateUserUseCase;
+import com.undec.acreditacion.application.input.ListRolesUseCase;
+import com.undec.acreditacion.application.input.ListUsersUseCase;
 import com.undec.acreditacion.application.input.LoginUseCase;
 import com.undec.acreditacion.application.input.RegisterUserUseCase;
+import com.undec.acreditacion.application.input.UpdateUserUseCase;
 import com.undec.acreditacion.application.output.PasswordHasher;
+import com.undec.acreditacion.application.output.RoleRepository;
 import com.undec.acreditacion.application.output.UserRepository;
+import com.undec.acreditacion.application.usecase.ChangeUserStatusService;
+import com.undec.acreditacion.application.usecase.CreateUserService;
+import com.undec.acreditacion.application.usecase.ListRolesService;
+import com.undec.acreditacion.application.usecase.ListUsersService;
 import com.undec.acreditacion.application.usecase.LoginService;
 import com.undec.acreditacion.application.usecase.RegisterUserService;
+import com.undec.acreditacion.application.usecase.UpdateUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,5 +38,34 @@ public class UseCaseConfiguration {
     @Bean
     public RegisterUserUseCase registerUserUseCase(UserRepository userRepository) {
         return new RegisterUserService(userRepository);
+    }
+
+    @Bean
+    public ListUsersUseCase listUsersUseCase(UserRepository userRepository) {
+        return new ListUsersService(userRepository);
+    }
+
+    @Bean
+    public ListRolesUseCase listRolesUseCase(RoleRepository roleRepository) {
+        return new ListRolesService(roleRepository);
+    }
+
+    @Bean
+    public ChangeUserStatusUseCase changeUserStatusUseCase(UserRepository userRepository) {
+        return new ChangeUserStatusService(userRepository);
+    }
+
+    @Bean
+    public UpdateUserUseCase updateUserUseCase(UserRepository userRepository,
+                                             RoleRepository roleRepository,
+                                             PasswordHasher passwordHasher) {
+        return new UpdateUserService(userRepository, roleRepository, passwordHasher);
+    }
+
+    @Bean
+    public CreateUserUseCase createUserUseCase(UserRepository userRepository,
+                                             RoleRepository roleRepository,
+                                             PasswordHasher passwordHasher) {
+        return new CreateUserService(userRepository, roleRepository, passwordHasher);
     }
 }
