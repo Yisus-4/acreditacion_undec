@@ -4,7 +4,7 @@ Monorepo que contiene el backend, frontend e infraestructura para el Sistema de 
 
 ---
 
-## 🚀 Inicio Rápido (Levantar Todo en un Solo Paso)
+## Inicio Rápido (Levantar Todo en un Solo Paso)
 
 Para levantar todo el entorno de desarrollo (Base de datos en Docker + Backend Spring Boot + Frontend Angular) ejecutá el script en la raíz del repositorio:
 
@@ -12,14 +12,6 @@ Para levantar todo el entorno de desarrollo (Base de datos en Docker + Backend S
 ```bash
 python dev.py
 ```
-*(Funciona automáticamente en **Windows**, **macOS** y **Linux** detectando el sistema operativo).*
-
-> **¿Qué hace este script?**
-> 1. Comprueba los archivos `.env` (creándolos desde sus `.env.example` si no existen).
-> 2. Levanta los contenedores de **PostgreSQL** y **MinIO** con Docker Compose.
-> 3. Espera a que PostgreSQL esté listo en `127.0.0.1:5432`.
-> 4. Abre ventanas de consola dedicadas con logs en vivo para el **Backend** (`mvn spring-boot:run`) y el **Frontend** (`pnpm start`).
-
 ### Detener todo el entorno:
 ```bash
 python dev.py stop
@@ -32,7 +24,7 @@ python dev.py status
 
 ---
 
-## 🌐 URLs y Servicios
+## URLs y Servicios
 
 | Servicio | URL / Host | Credenciales por Defecto |
 |---|---|---|
@@ -48,7 +40,7 @@ python dev.py status
 
 ---
 
-## 📁 Estructura del Monorepo
+## Estructura del Monorepo
 
 * **[`backend/`](backend/)**: API REST desarrollada en **Java 21** y **Spring Boot 3.2.5** bajo principios de **Clean Architecture**:
   * `domain/`: Entidades puras e invariantes de negocio (`User`, `Role`, `Permission`).
@@ -61,7 +53,7 @@ python dev.py status
 
 ---
 
-## 🧪 Ejecución Manual y Pruebas
+## Ejecución Manual y Pruebas
 
 Si preferís levantar cada componente por separado en terminales independientes:
 
@@ -87,7 +79,3 @@ cd frontend
 pnpm install
 pnpm start
 ```
-* Para verificar la compilación de producción:
-  ```bash
-  pnpm build
-  ```
