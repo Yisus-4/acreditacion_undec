@@ -8,27 +8,26 @@ Monorepo que contiene el backend, frontend e infraestructura para el Sistema de 
 
 Para levantar todo el entorno de desarrollo (Base de datos en Docker + Backend Spring Boot + Frontend Angular) ejecutá el script en la raíz del repositorio:
 
-### En PowerShell:
+### En Windows (PowerShell):
 ```powershell
 .\start-dev.ps1
 ```
+*(O en CMD / Doble clic: `start-dev.bat`)*
 
-### O en CMD / Doble Clic:
-```cmd
-start-dev.bat
+### En macOS y Linux (Bash):
+```bash
+./start-dev.sh
 ```
 
 > **¿Qué hace este script?**
 > 1. Comprueba los archivos `.env` (creándolos desde sus `.env.example` si no existen).
 > 2. Levanta los contenedores de **PostgreSQL** y **MinIO** con Docker Compose.
 > 3. Espera a que PostgreSQL esté listo en el puerto `5432`.
-> 4. Abre una ventana de consola dedicada y levanta el **Backend** (`mvn spring-boot:run`).
-> 5. Abre una ventana de consola dedicada y levanta el **Frontend** (`pnpm start`).
+> 4. En Windows y macOS abre terminales dedicadas con logs en vivo para el **Backend** (`mvn spring-boot:run`) y el **Frontend** (`pnpm start`).
 
 Para **detener** todos los servicios y contenedores:
-```powershell
-.\stop-dev.ps1
-```
+* En Windows: `.\stop-dev.ps1` (o `stop-dev.bat`)
+* En macOS / Linux: `./stop-dev.sh`
 
 ---
 
