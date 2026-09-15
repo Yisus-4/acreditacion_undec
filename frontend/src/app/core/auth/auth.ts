@@ -1,27 +1,20 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
 import { Credentials, Session } from './auth.models';
 
 /**
  * `Auth` es el servicio singleton de autenticación.
  *
- * **Estado actual**: implementación MOCK temporal y aislada. El backend Spring
- * todavía no expone un endpoint de autenticación ni JWT, por lo que este
- * servicio NO realiza llamadas HTTP reales. La sección marcada como
- * `MOCK — reemplazar por HTTP` es lo único que debe cambiarse cuando el backend
- * esté listo; el resto del contrato (sesión, observables, signOut) se conserva.
- *
- * Sustitución futura:
- *   return this.http.post<SessionResponse>('/auth/login', credentials).pipe(
- *     map(toSession), tap((s) => this.session$.next(s)),
- *   );
+ * Se conecta al backend Spring Boot mediante el endpoint HTTP `/api/auth/login`.
+ * En desarrollo, las peticiones a `/api/*` son redirigidas por proxy.conf.json a http://localhost:8080.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
+  private readonly http = inject(HttpClient);
   private readonly session$ = new BehaviorSubject<Session | null>(null);
 
   /** Observable de la sesión actual (null cuando no hay sesión). */
@@ -36,37 +29,20 @@ export class Auth {
   }
 
   /**
-   * Autentica credenciales. Devuelve un `Observable<Session>` que emite la
-   * sesión en éxito o un `InvalidCredentialsError` en fracaso.
-   *
-   * La latencia simulada existe para que el UI ejercite el estado `loading`.
+   * Autentica credenciales contra el backend.
+   * Devuelve un `Observable<Session>` que emite la sesión en éxito o un
+   * `InvalidCredentialsError` en 401.
    */
   signIn(credentials: Credentials): Observable<Session> {
-    // ────────────────────────────────────────────────────────────────────────
-    // MOCK — reemplazar por HTTP real cuando el backend exponga /auth/login.
-    // No usar este bloque en producción: las credenciales viven en el cliente.
-    // ────────────────────────────────────────────────────────────────────────
-    const match = MOCK_USERS.find(
-      (u) => u.email === credentials.email && u.password === credentials.password,
+    return this.http.post<Session>('/api/auth/login', credentials).pipe(
+      tap((session) => this.session$.next(session)),
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          return throwError(() => new InvalidCredentialsError());
+        }
+        return throwError(() => error);
+      }),
     );
-    // ────────────────────────────────────────────────────────────────────────
-
-    if (!match) {
-      return throwError(() => new InvalidCredentialsError()).pipe(delay(MOCK_LATENCY_MS));
-    }
-
-    const session: Session = {
-      user: {
-        id: match.id,
-        email: match.email,
-        displayName: match.displayName,
-        roleCodes: match.roleCodes,
-      },
-      token: `mock-token-${Date.now()}`,
-      issuedAt: Date.now(),
-    };
-    this.session$.next(session);
-    return of(session).pipe(delay(MOCK_LATENCY_MS));
   }
 
   /** Cierra la sesión actual. */
@@ -83,33 +59,3 @@ export class InvalidCredentialsError extends Error {
     Object.setPrototypeOf(this, InvalidCredentialsError.prototype);
   }
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// MOCK — datos de demo. Eliminar al conectar el backend real.
-// ────────────────────────────────────────────────────────────────────────────
-const MOCK_LATENCY_MS = 700;
-
-interface MockUser {
-  readonly id: string;
-  readonly email: string;
-  readonly password: string;
-  readonly displayName: string;
-  readonly roleCodes: readonly string[];
-}
-
-const MOCK_USERS: readonly MockUser[] = [
-  {
-    id: '1',
-    email: 'coordinadora@undec.edu.ar',
-    password: 'undec2026',
-    displayName: 'Coordinadora de Acreditación',
-    roleCodes: ['COORDINADORA_AC'],
-  },
-  {
-    id: '2',
-    email: 'dea@undec.edu.ar',
-    password: 'undec2026',
-    displayName: 'Director/a de Carrera',
-    roleCodes: ['DEA'],
-  },
-];

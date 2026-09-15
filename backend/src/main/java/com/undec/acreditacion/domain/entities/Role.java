@@ -26,6 +26,20 @@ public final class Role {
         return new Role(id, code, name, description, true, false);
     }
 
+    public static Role rehydrate(UUID id, String code, String name, String description,
+                                 boolean active, boolean systemRole, Set<Permission> permissions) {
+        if (systemRole && !active) {
+            throw new DomainValidationException("System role cannot be deactivated");
+        }
+        Role role = new Role(id, code, name, description, active, systemRole);
+        if (permissions != null) {
+            for (Permission permission : permissions) {
+                role.addPermission(permission);
+            }
+        }
+        return role;
+    }
+
     private Role(UUID id, String code, String name, String description, boolean active, boolean systemRole) {
         this.id = Objects.requireNonNull(id, "Role id is required");
         this.code = Permission.requireCode(code, "role");

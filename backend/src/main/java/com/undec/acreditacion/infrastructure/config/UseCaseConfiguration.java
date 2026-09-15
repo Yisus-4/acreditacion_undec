@@ -1,9 +1,11 @@
 package com.undec.acreditacion.infrastructure.config;
 
 import com.undec.acreditacion.application.input.LoginUseCase;
+import com.undec.acreditacion.application.input.RegisterUserUseCase;
 import com.undec.acreditacion.application.output.PasswordHasher;
 import com.undec.acreditacion.application.output.UserRepository;
 import com.undec.acreditacion.application.usecase.LoginService;
+import com.undec.acreditacion.application.usecase.RegisterUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,5 +22,10 @@ public class UseCaseConfiguration {
     @Bean
     public LoginUseCase loginUseCase(UserRepository userRepository, PasswordHasher passwordHasher) {
         return new LoginService(userRepository, passwordHasher);
+    }
+
+    @Bean
+    public RegisterUserUseCase registerUserUseCase(UserRepository userRepository) {
+        return new RegisterUserService(userRepository);
     }
 }

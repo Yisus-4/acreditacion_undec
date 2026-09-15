@@ -15,6 +15,7 @@ opencode.jsonc
 
 # Local agent instructions
 backend/Agents/
+frontend/agents/
 
 # Logs
 *.log

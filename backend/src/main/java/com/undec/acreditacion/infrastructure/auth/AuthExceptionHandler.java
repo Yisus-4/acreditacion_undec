@@ -1,6 +1,7 @@
 package com.undec.acreditacion.infrastructure.auth;
 
 import com.undec.acreditacion.application.exception.AuthenticationFailedException;
+import com.undec.acreditacion.application.exception.RateLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,6 +25,12 @@ public final class AuthExceptionHandler {
     public ResponseEntity<Map<String, String>> handleAuthenticationFailure(AuthenticationFailedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", GENERIC_AUTH_ERROR));
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, String>> handleRateLimit(RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
