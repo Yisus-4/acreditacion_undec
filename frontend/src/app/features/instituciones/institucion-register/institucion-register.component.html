@@ -1,0 +1,518 @@
+<div class="register-layout">
+  <!-- Cabecera institucional -->
+  <header class="register-header">
+    <div class="register-header__content">
+      <div class="register-header__left">
+        <a class="back-link" routerLink="/admin/instituciones">&larr; Volver a Instituciones</a>
+        <h1 class="register-header__title">Registrar Institución</h1>
+        <p class="register-header__desc">
+          Complete los cuatro bloques de datos para registrar una nueva institución universitaria en el sistema.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <main class="register-container">
+    <!-- Alertas globales -->
+    @if (errorMessage()) {
+      <div class="alert alert--danger" role="alert">
+        <div class="alert__content">
+          <svg class="alert__icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+        <button type="button" class="alert__close" (click)="errorMessage.set(null)" aria-label="Cerrar">&times;</button>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert alert--success" role="alert">
+        <div class="alert__content">
+          <svg class="alert__icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <strong>{{ successMessage() }}</strong>
+            <p class="text-sm mt-1">Redirigiendo al listado de instituciones...</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Formulario reactivo de 4 bloques -->
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="form-grid">
+
+      <!-- BLOQUE 1: Información de la Institución -->
+      <section class="form-card">
+        <div class="form-card__header">
+          <div class="step-badge">1</div>
+          <div class="form-card__titles">
+            <h2 class="form-card__title">Información de la Institución</h2>
+            <p class="form-card__subtitle">Datos generales de identificación y emblema institucional</p>
+          </div>
+        </div>
+
+        <div class="form-card__body">
+          <div class="form-row">
+            <div class="form-field flex-2">
+              <label for="nombre">Nombre de la Institución <span class="required">*</span></label>
+              <input
+                id="nombre"
+                type="text"
+                formControlName="nombre"
+                placeholder="Ej. Universidad Nacional de Chilecito"
+                [class.has-error]="form.get('nombre')?.invalid && (form.get('nombre')?.touched || form.get('nombre')?.dirty)"
+              />
+              @if (form.get('nombre')?.invalid && (form.get('nombre')?.touched || form.get('nombre')?.dirty)) {
+                <span class="form-error">El nombre de la institución es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="sigla">Sigla <span class="required">*</span></label>
+              <input
+                id="sigla"
+                type="text"
+                formControlName="sigla"
+                placeholder="Ej. UNdeC"
+                [class.has-error]="form.get('sigla')?.invalid && (form.get('sigla')?.touched || form.get('sigla')?.dirty)"
+              />
+              @if (form.get('sigla')?.invalid && (form.get('sigla')?.touched || form.get('sigla')?.dirty)) {
+                <span class="form-error">La sigla es obligatoria.</span>
+              }
+            </div>
+          </div>
+
+          <!-- Carga de logotipo -->
+          <div class="form-field mt-3">
+            <label>Logotipo Institucional <span class="required">*</span></label>
+
+            @if (!previewUrl()) {
+              <div
+                class="file-dropzone"
+                [class.file-dropzone--dragging]="isDragging()"
+                [class.file-dropzone--error]="fileError()"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+              >
+                <input
+                  #fileInput
+                  type="file"
+                  id="logoInput"
+                  accept="image/png,image/jpeg"
+                  class="sr-only"
+                  (change)="onFileSelected($event)"
+                />
+                <svg class="file-dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                  <path d="M12 12v9" />
+                  <path d="m16 16-4-4-4 4" />
+                </svg>
+                <div class="file-dropzone__text">
+                  <span>Arrastre el archivo de imagen aquí, o</span>
+                  <button type="button" class="btn-link" (click)="fileInput.click()">seleccione desde su dispositivo</button>
+                </div>
+                <span class="file-dropzone__hint">Formatos admitidos: PNG o JPG (máximo 5 MB).</span>
+              </div>
+            } @else {
+              <div class="preview-card">
+                <div class="preview-card__img-container">
+                  <img [src]="previewUrl()" alt="Vista previa del logotipo" class="preview-card__img" />
+                </div>
+                <div class="preview-card__details">
+                  <span class="preview-card__filename">{{ selectedFile()?.name }}</span>
+                  <span class="preview-card__filesize">
+                    {{ ((selectedFile()?.size || 0) / 1024).toFixed(1) }} KB
+                  </span>
+                  <div class="preview-card__status">
+                    <span class="badge badge--success">&#10003; Imagen cargada</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn--secondary btn--sm"
+                  (click)="eliminarArchivo()"
+                  title="Cambiar o eliminar imagen"
+                >
+                  Eliminar imagen
+                </button>
+              </div>
+            }
+
+            @if (fileError()) {
+              <span class="form-error mt-1">{{ fileError() }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- BLOQUE 2: Máxima Autoridad -->
+      <section class="form-card" formGroupName="maximaAutoridad">
+        <div class="form-card__header">
+          <div class="step-badge">2</div>
+          <div class="form-card__titles">
+            <h2 class="form-card__title">Máxima Autoridad</h2>
+            <p class="form-card__subtitle">Rector/a, Presidente/a o Decano/a responsable de la institución</p>
+          </div>
+        </div>
+
+        <div class="form-card__body">
+          <div class="form-row">
+            <div class="form-field flex-1">
+              <label for="maxAutApellido">Apellido <span class="required">*</span></label>
+              <input
+                id="maxAutApellido"
+                type="text"
+                formControlName="apellido"
+                placeholder="Ej. Pérez"
+                [class.has-error]="maximaAutoridadGroup.get('apellido')?.invalid && (maximaAutoridadGroup.get('apellido')?.touched || maximaAutoridadGroup.get('apellido')?.dirty)"
+              />
+              @if (maximaAutoridadGroup.get('apellido')?.invalid && (maximaAutoridadGroup.get('apellido')?.touched || maximaAutoridadGroup.get('apellido')?.dirty)) {
+                <span class="form-error">El apellido es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="maxAutPrimerNombre">Primer Nombre <span class="required">*</span></label>
+              <input
+                id="maxAutPrimerNombre"
+                type="text"
+                formControlName="primerNombre"
+                placeholder="Ej. Juan"
+                [class.has-error]="maximaAutoridadGroup.get('primerNombre')?.invalid && (maximaAutoridadGroup.get('primerNombre')?.touched || maximaAutoridadGroup.get('primerNombre')?.dirty)"
+              />
+              @if (maximaAutoridadGroup.get('primerNombre')?.invalid && (maximaAutoridadGroup.get('primerNombre')?.touched || maximaAutoridadGroup.get('primerNombre')?.dirty)) {
+                <span class="form-error">El primer nombre es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="maxAutSegundoNombre">Segundo Nombre</label>
+              <input
+                id="maxAutSegundoNombre"
+                type="text"
+                formControlName="segundoNombre"
+                placeholder="Ej. Carlos"
+              />
+            </div>
+          </div>
+
+          <div class="form-row mt-2">
+            <div class="form-field flex-1">
+              <label for="maxAutTelefono">Teléfono <span class="required">*</span></label>
+              <input
+                id="maxAutTelefono"
+                type="text"
+                formControlName="telefono"
+                placeholder="Ej. +54 3825 423300"
+                [class.has-error]="maximaAutoridadGroup.get('telefono')?.invalid && (maximaAutoridadGroup.get('telefono')?.touched || maximaAutoridadGroup.get('telefono')?.dirty)"
+              />
+              @if (maximaAutoridadGroup.get('telefono')?.invalid && (maximaAutoridadGroup.get('telefono')?.touched || maximaAutoridadGroup.get('telefono')?.dirty)) {
+                <span class="form-error">El teléfono es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="maxAutEmail">Correo Electrónico <span class="required">*</span></label>
+              <input
+                id="maxAutEmail"
+                type="email"
+                formControlName="email"
+                placeholder="Ej. rector@undec.edu.ar"
+                [class.has-error]="maximaAutoridadGroup.get('email')?.invalid && (maximaAutoridadGroup.get('email')?.touched || maximaAutoridadGroup.get('email')?.dirty)"
+              />
+              @if (maximaAutoridadGroup.get('email')?.invalid && (maximaAutoridadGroup.get('email')?.touched || maximaAutoridadGroup.get('email')?.dirty)) {
+                <span class="form-error">Ingrese un correo electrónico válido.</span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BLOQUE 3: Administrador Institucional -->
+      <section class="form-card" formGroupName="administradorInstitucional">
+        <div class="form-card__header">
+          <div class="step-badge">3</div>
+          <div class="form-card__titles">
+            <h2 class="form-card__title">Administrador Institucional</h2>
+            <p class="form-card__subtitle">Referente técnico y operativo de la institución en la plataforma</p>
+          </div>
+        </div>
+
+        <div class="form-card__body">
+          <div class="form-row">
+            <div class="form-field flex-1">
+              <label for="adminApellido">Apellido <span class="required">*</span></label>
+              <input
+                id="adminApellido"
+                type="text"
+                formControlName="apellido"
+                placeholder="Ej. Gómez"
+                [class.has-error]="administradorGroup.get('apellido')?.invalid && (administradorGroup.get('apellido')?.touched || administradorGroup.get('apellido')?.dirty)"
+              />
+              @if (administradorGroup.get('apellido')?.invalid && (administradorGroup.get('apellido')?.touched || administradorGroup.get('apellido')?.dirty)) {
+                <span class="form-error">El apellido es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="adminPrimerNombre">Primer Nombre <span class="required">*</span></label>
+              <input
+                id="adminPrimerNombre"
+                type="text"
+                formControlName="primerNombre"
+                placeholder="Ej. María"
+                [class.has-error]="administradorGroup.get('primerNombre')?.invalid && (administradorGroup.get('primerNombre')?.touched || administradorGroup.get('primerNombre')?.dirty)"
+              />
+              @if (administradorGroup.get('primerNombre')?.invalid && (administradorGroup.get('primerNombre')?.touched || administradorGroup.get('primerNombre')?.dirty)) {
+                <span class="form-error">El primer nombre es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="adminSegundoNombre">Segundo Nombre</label>
+              <input
+                id="adminSegundoNombre"
+                type="text"
+                formControlName="segundoNombre"
+                placeholder="Ej. Elena"
+              />
+            </div>
+          </div>
+
+          <div class="form-row mt-2">
+            <div class="form-field flex-1">
+              <label for="adminEmail">Correo Electrónico <span class="required">*</span></label>
+              <input
+                id="adminEmail"
+                type="email"
+                formControlName="email"
+                placeholder="Ej. maria.gomez@undec.edu.ar"
+                [class.has-error]="administradorGroup.get('email')?.invalid && (administradorGroup.get('email')?.touched || administradorGroup.get('email')?.dirty)"
+              />
+              @if (administradorGroup.get('email')?.invalid && (administradorGroup.get('email')?.touched || administradorGroup.get('email')?.dirty)) {
+                <span class="form-error">Ingrese un correo electrónico válido.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="adminTelefono">Teléfono <span class="required">*</span></label>
+              <input
+                id="adminTelefono"
+                type="text"
+                formControlName="telefono"
+                placeholder="Ej. +54 3825 423301"
+                [class.has-error]="administradorGroup.get('telefono')?.invalid && (administradorGroup.get('telefono')?.touched || administradorGroup.get('telefono')?.dirty)"
+              />
+              @if (administradorGroup.get('telefono')?.invalid && (administradorGroup.get('telefono')?.touched || administradorGroup.get('telefono')?.dirty)) {
+                <span class="form-error">El teléfono es obligatorio.</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-row mt-2">
+            <div class="form-field flex-1">
+              <label for="adminCargo">Cargo <span class="required">*</span></label>
+              <input
+                id="adminCargo"
+                type="text"
+                formControlName="cargo"
+                placeholder="Ej. Secretario/a de Gestión y Acreditación"
+                [class.has-error]="administradorGroup.get('cargo')?.invalid && (administradorGroup.get('cargo')?.touched || administradorGroup.get('cargo')?.dirty)"
+              />
+              @if (administradorGroup.get('cargo')?.invalid && (administradorGroup.get('cargo')?.touched || administradorGroup.get('cargo')?.dirty)) {
+                <span class="form-error">El cargo es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="adminAmbito">Ámbito / Dependencia <span class="required">*</span></label>
+              <input
+                id="adminAmbito"
+                type="text"
+                formControlName="ambito"
+                placeholder="Ej. Rectorado / Secretaría Académica"
+                [class.has-error]="administradorGroup.get('ambito')?.invalid && (administradorGroup.get('ambito')?.touched || administradorGroup.get('ambito')?.dirty)"
+              />
+              @if (administradorGroup.get('ambito')?.invalid && (administradorGroup.get('ambito')?.touched || administradorGroup.get('ambito')?.dirty)) {
+                <span class="form-error">El ámbito es obligatorio.</span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BLOQUE 4: Dirección de la Sede Central -->
+      <section class="form-card" formGroupName="sedeCentral">
+        <div class="form-card__header">
+          <div class="step-badge">4</div>
+          <div class="form-card__titles">
+            <h2 class="form-card__title">Dirección de la Sede Central</h2>
+            <p class="form-card__subtitle">Ubicación física principal de la institución universitaria</p>
+          </div>
+        </div>
+
+        <div class="form-card__body">
+          <div class="form-row">
+            <div class="form-field flex-2">
+              <label for="calle">Calle <span class="required">*</span></label>
+              <input
+                id="calle"
+                type="text"
+                formControlName="calle"
+                placeholder="Ej. 9 de Julio"
+                [class.has-error]="sedeCentralGroup.get('calle')?.invalid && (sedeCentralGroup.get('calle')?.touched || sedeCentralGroup.get('calle')?.dirty)"
+              />
+              @if (sedeCentralGroup.get('calle')?.invalid && (sedeCentralGroup.get('calle')?.touched || sedeCentralGroup.get('calle')?.dirty)) {
+                <span class="form-error">La calle es obligatoria.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="numero">Número <span class="required">*</span></label>
+              <input
+                id="numero"
+                type="text"
+                formControlName="numero"
+                placeholder="Ej. 22"
+                [class.has-error]="sedeCentralGroup.get('numero')?.invalid && (sedeCentralGroup.get('numero')?.touched || sedeCentralGroup.get('numero')?.dirty)"
+              />
+              @if (sedeCentralGroup.get('numero')?.invalid && (sedeCentralGroup.get('numero')?.touched || sedeCentralGroup.get('numero')?.dirty)) {
+                <span class="form-error">El número es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="piso">Piso</label>
+              <input id="piso" type="text" formControlName="piso" placeholder="Ej. 1" />
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="departamento">Dpto / Oficina</label>
+              <input id="departamento" type="text" formControlName="departamento" placeholder="Ej. B" />
+            </div>
+          </div>
+
+          <!-- Desplegables en cascada: Provincia -> Departamento -> Localidad -->
+          <div class="form-row mt-2">
+            <div class="form-field flex-1">
+              <label for="provinciaId">Provincia <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select
+                  id="provinciaId"
+                  formControlName="provinciaId"
+                  [class.has-error]="sedeCentralGroup.get('provinciaId')?.invalid && (sedeCentralGroup.get('provinciaId')?.touched || sedeCentralGroup.get('provinciaId')?.dirty)"
+                >
+                  <option [ngValue]="null" disabled selected>
+                    {{ loadingProvincias() ? 'Cargando provincias...' : '-- Seleccionar Provincia --' }}
+                  </option>
+                  @for (prov of provincias(); track prov.id) {
+                    <option [ngValue]="prov.id">{{ prov.nombre }}</option>
+                  }
+                </select>
+              </div>
+              @if (sedeCentralGroup.get('provinciaId')?.invalid && (sedeCentralGroup.get('provinciaId')?.touched || sedeCentralGroup.get('provinciaId')?.dirty)) {
+                <span class="form-error">Debe seleccionar una provincia.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="departamentoId">Departamento <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select
+                  id="departamentoId"
+                  formControlName="departamentoId"
+                  [class.has-error]="sedeCentralGroup.get('departamentoId')?.invalid && (sedeCentralGroup.get('departamentoId')?.touched || sedeCentralGroup.get('departamentoId')?.dirty)"
+                >
+                  <option [ngValue]="null" disabled selected>
+                    @if (loadingDepartamentos()) {
+                      Cargando departamentos...
+                    } @else if (!sedeCentralGroup.get('provinciaId')?.value) {
+                      Primero elija una provincia
+                    } @else {
+                      -- Seleccionar Departamento --
+                    }
+                  </option>
+                  @for (dep of departamentos(); track dep.id) {
+                    <option [ngValue]="dep.id">{{ dep.nombre }}</option>
+                  }
+                </select>
+              </div>
+              @if (sedeCentralGroup.get('departamentoId')?.invalid && (sedeCentralGroup.get('departamentoId')?.touched || sedeCentralGroup.get('departamentoId')?.dirty)) {
+                <span class="form-error">Debe seleccionar un departamento.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="localidadId">Localidad <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select
+                  id="localidadId"
+                  formControlName="localidadId"
+                  [class.has-error]="sedeCentralGroup.get('localidadId')?.invalid && (sedeCentralGroup.get('localidadId')?.touched || sedeCentralGroup.get('localidadId')?.dirty)"
+                >
+                  <option [ngValue]="null" disabled selected>
+                    @if (loadingLocalidades()) {
+                      Cargando localidades...
+                    } @else if (!sedeCentralGroup.get('departamentoId')?.value) {
+                      Primero elija un departamento
+                    } @else {
+                      -- Seleccionar Localidad --
+                    }
+                  </option>
+                  @for (loc of localidades(); track loc.id) {
+                    <option [ngValue]="loc.id">{{ loc.nombre }}</option>
+                  }
+                </select>
+              </div>
+              @if (sedeCentralGroup.get('localidadId')?.invalid && (sedeCentralGroup.get('localidadId')?.touched || sedeCentralGroup.get('localidadId')?.dirty)) {
+                <span class="form-error">Debe seleccionar una localidad.</span>
+              }
+            </div>
+
+            <div class="form-field flex-1">
+              <label for="codigoPostal">Código Postal <span class="required">*</span></label>
+              <input
+                id="codigoPostal"
+                type="text"
+                formControlName="codigoPostal"
+                placeholder="Ej. 5360"
+                [class.has-error]="sedeCentralGroup.get('codigoPostal')?.invalid && (sedeCentralGroup.get('codigoPostal')?.touched || sedeCentralGroup.get('codigoPostal')?.dirty)"
+              />
+              @if (sedeCentralGroup.get('codigoPostal')?.invalid && (sedeCentralGroup.get('codigoPostal')?.touched || sedeCentralGroup.get('codigoPostal')?.dirty)) {
+                <span class="form-error">El código postal es obligatorio.</span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Barra de acciones inferiores -->
+      <footer class="form-actions">
+        <button
+          type="button"
+          class="btn btn--secondary"
+          (click)="cancelar()"
+          [disabled]="submitting()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="spinner-sm" aria-hidden="true"></span>
+            <span>Registrando institución...</span>
+          } @else {
+            <span>Registrar Institución</span>
+          }
+        </button>
+      </footer>
+    </form>
+  </main>
+</div>

@@ -66,6 +66,33 @@
         </a>
       }
 
+      <!-- Módulo Gestión Institucional (ADMINISTRATOR o AEA) -->
+      @if (canManageInstitutions) {
+        <a class="module-card module-card--active" routerLink="/admin/instituciones">
+          <div class="module-card__icon">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18" />
+              <path d="M5 21V9l7-5 7 5v12" />
+              <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6" />
+              <path d="M9 9h.01" />
+              <path d="M15 9h.01" />
+            </svg>
+          </div>
+          <div class="module-card__body">
+            <div class="module-card__header">
+              <h3 class="module-card__title">Gestión Institucional</h3>
+              <span class="status-chip status-chip--enabled">Disponible</span>
+            </div>
+            <p class="module-card__desc">
+              Administración de instituciones universitarias, sedes centrales y autoridades académicas.
+            </p>
+          </div>
+          <div class="module-card__action">
+            <span>Acceder al módulo &rarr;</span>
+          </div>
+        </a>
+      }
+
       <!-- Módulos Futuros (Placeholders) -->
       <div class="module-card module-card--disabled">
         <div class="module-card__icon module-card__icon--muted">

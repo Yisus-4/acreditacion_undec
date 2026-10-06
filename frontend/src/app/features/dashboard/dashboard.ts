@@ -25,6 +25,14 @@ export class Dashboard {
     return this.user?.roleCodes.includes('ADMINISTRATOR') ?? false;
   }
 
+  get canManageInstitutions(): boolean {
+    return (
+      this.user?.roleCodes.some(
+        (role) => role === 'ADMINISTRATOR' || role === 'AEA'
+      ) ?? false
+    );
+  }
+
   onSignOut(): void {
     this.auth.signOut();
   }

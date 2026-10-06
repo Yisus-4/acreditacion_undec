@@ -17,6 +17,15 @@ import com.undec.acreditacion.application.usecase.ListUsersService;
 import com.undec.acreditacion.application.usecase.LoginService;
 import com.undec.acreditacion.application.usecase.RegisterUserService;
 import com.undec.acreditacion.application.usecase.UpdateUserService;
+import com.undec.acreditacion.application.input.ConsultarGeografiaUseCase;
+import com.undec.acreditacion.application.input.ListarInstitucionesUseCase;
+import com.undec.acreditacion.application.input.RegistrarInstitucionUseCase;
+import com.undec.acreditacion.application.usecase.ConsultarGeografiaService;
+import com.undec.acreditacion.application.usecase.ListarInstitucionesService;
+import com.undec.acreditacion.application.usecase.RegistrarInstitucionService;
+import com.undec.acreditacion.domain.ports.DocumentStoragePort;
+import com.undec.acreditacion.domain.ports.GeografiaRepositoryPort;
+import com.undec.acreditacion.domain.ports.InstitucionRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -67,5 +76,21 @@ public class UseCaseConfiguration {
                                              RoleRepository roleRepository,
                                              PasswordHasher passwordHasher) {
         return new CreateUserService(userRepository, roleRepository, passwordHasher);
+    }
+
+    @Bean
+    public RegistrarInstitucionUseCase registrarInstitucionUseCase(InstitucionRepositoryPort institucionRepository,
+                                                                   DocumentStoragePort documentStoragePort) {
+        return new RegistrarInstitucionService(institucionRepository, documentStoragePort);
+    }
+
+    @Bean
+    public ListarInstitucionesUseCase listarInstitucionesUseCase(InstitucionRepositoryPort institucionRepository) {
+        return new ListarInstitucionesService(institucionRepository);
+    }
+
+    @Bean
+    public ConsultarGeografiaUseCase consultarGeografiaUseCase(GeografiaRepositoryPort geografiaRepository) {
+        return new ConsultarGeografiaService(geografiaRepository);
     }
 }

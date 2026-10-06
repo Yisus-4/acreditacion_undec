@@ -24,5 +24,23 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/admin/users/users').then((m) => m.UserManagement),
   },
+  {
+    path: 'admin/instituciones',
+    title: 'Administrar Instituciones — Sistema de Acreditación UNdeC',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/instituciones/institucion-list/institucion-list.component'
+      ).then((m) => m.InstitucionListComponent),
+  },
+  {
+    path: 'admin/instituciones/nueva',
+    title: 'Registrar Institución — Sistema de Acreditación UNdeC',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/instituciones/institucion-register/institucion-register.component'
+      ).then((m) => m.InstitucionRegisterComponent),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
